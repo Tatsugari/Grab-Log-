@@ -1,0 +1,126 @@
+@page
+@model LogsModel
+@{
+    ViewData["Title"] = "Activity Logs";
+}
+
+<div class="topbar">
+  <div class="brand">
+    <img src="~/logo.png" class="logo-img sm" alt="" />
+    <div>
+      <div style="font-weight:700;font-size:13px;">GRAB & LOG</div>
+      <div style="font-size:9px;color:var(--muted);">TOOL ROOM 5.1</div>
+    </div>
+  </div>
+  <a href="/Operators" class="user" style="text-decoration:none;color:inherit;">
+    <div style="text-align:right;line-height:1.3;">
+      <div style="font-weight:600;">@Model.UserName</div>
+      <div style="font-size:10px;color:var(--muted);">ADMIN · #@Model.OpId</div>
+    </div>
+    <div class="avatar">@Model.Initials</div>
+  </a>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="nav-label">NAVIGATION</div>
+    <a class="nav-btn" href="/Inventory">📦 Inventory</a>
+    <a class="nav-btn" href="/Registry">📋 Control Registry</a>
+    <a class="nav-btn active" href="/Logs">📜 Activity Logs</a>
+    <a class="nav-btn" href="/Alerts">🚨 Alerts Desk</a>
+    <a class="nav-btn" href="/Operators">👥 Member Registry</a>
+    <div class="sidebar-foot">ADMIN MODE · SYSTEM</div>
+  </div>
+
+  <div class="content" style="color:#f0f0f0;">
+    <div style="margin-bottom:16px;">
+      <h2 style="font-size:20px;margin:0 0 6px;color:#f0f0f0;">Activity Logs</h2>
+      <p style="font-size:12px;color:#8a8a8a;margin:0;">
+        History of borrow, return, dispose, restore, overdue.
+        @if (!string.IsNullOrEmpty(Model.ToolFilter))
+        {
+          <span> · Filter: <strong>@Model.ToolFilter</strong> <a href="/Logs" style="color:#ffcc00;">Clear</a></span>
+        }
+      </p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+      <div style="background:rgba(239,68,68,0.2);border:1px solid #ef4444;border-radius:8px;padding:14px;margin-bottom:16px;color:#ef4444;">
+        <strong>Error:</strong> @Model.Error
+      </div>
+    }
+
+    <div style="margin-bottom:12px;font-size:12px;color:#8a8a8a;">
+      Showing <strong style="color:#f0f0f0;">@(Model.Entries?.Count ?? 0)</strong> entries
+    </div>
+
+    @if (Model.Entries == null || Model.Entries.Count == 0)
+    {
+      <div style="background:#161616;border:1px solid #2a2a2a;border-radius:10px;padding:32px;text-align:center;color:#8a8a8a;">
+        No log entries yet. Borrow or return a tool, then refresh this page.
+      </div>
+    }
+    else
+    {
+      <div style="background:#161616;border:1px solid #2a2a2a;border-radius:10px;overflow:auto;">
+        <table style="width:100%;border-collapse:collapse;min-width:640px;">
+          <thead>
+            <tr style="border-bottom:1px solid #2a2a2a;background:#1a1a1a;">
+              <th style="text-align:left;padding:12px 14px;font-size:10px;color:#8a8a8a;letter-spacing:0.5px;">TIME</th>
+              <th style="text-align:left;padding:12px 14px;font-size:10px;color:#8a8a8a;letter-spacing:0.5px;">ACTION</th>
+              <th style="text-align:left;padding:12px 14px;font-size:10px;color:#8a8a8a;letter-spacing:0.5px;">TOOL</th>
+              <th style="text-align:left;padding:12px 14px;font-size:10px;color:#8a8a8a;letter-spacing:0.5px;">USER</th>
+              <th style="text-align:left;padding:12px 14px;font-size:10px;color:#8a8a8a;letter-spacing:0.5px;">DETAILS</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var e in Model.Entries)
+            {
+              var local = e.CreatedAt.HasValue ? e.CreatedAt.Value.ToLocalTime() : (DateTime?)null;
+              var actionColor = e.Action switch
+              {
+                  "borrow" => "#ffcc00",
+                  "return" => "#22c55e",
+                  "dispose" => "#ef4444",
+                  "restore" => "#22c55e",
+                  "overdue" => "#ef4444",
+                  _ => "#8a8a8a"
+              };
+              <tr style="border-bottom:1px solid #2a2a2a;">
+                <td style="padding:12px 14px;font-size:12px;white-space:nowrap;color:#f0f0f0;">
+                  @if (local.HasValue)
+                  {
+                    <div>@local.Value.ToString("MMM d, yyyy")</div>
+                    <div style="color:#8a8a8a;font-size:11px;">@local.Value.ToString("h:mm:ss tt")</div>
+                  }
+                  else
+                  {
+                    <span style="color:#8a8a8a;">—</span>
+                  }
+                </td>
+                <td style="padding:12px 14px;">
+                  <span style="font-size:10px;font-weight:700;letter-spacing:0.5px;color:@actionColor;">@(e.Action?.ToUpper() ?? "—")</span>
+                </td>
+                <td style="padding:12px 14px;font-size:12px;color:#f0f0f0;">
+                  <a href="/Logs?tool=@Uri.EscapeDataString(e.ToolId ?? "")" style="color:#f0f0f0;text-decoration:none;">
+                    <strong>@e.ToolName</strong>
+                    <span style="color:#8a8a8a;font-size:11px;"> (@e.ToolId)</span>
+                  </a>
+                </td>
+                <td style="padding:12px 14px;font-size:12px;color:#f0f0f0;">
+                  @e.UserName
+                  @if (!string.IsNullOrEmpty(e.UserEmail))
+                  {
+                    <div style="color:#8a8a8a;font-size:11px;">@e.UserEmail</div>
+                  }
+                </td>
+                <td style="padding:12px 14px;font-size:12px;color:#8a8a8a;">@e.Details</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

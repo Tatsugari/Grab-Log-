@@ -1,0 +1,134 @@
+@page
+@model InventoryModel
+@{
+    ViewData["Title"] = "Inventory";
+    var name = Model.UserName;
+    var initials = string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => char.ToUpper(p[0])));
+}
+
+<div class="topbar">
+  <div class="brand">
+    <img src="~/logo.png" class="logo-img sm" alt="" />
+    <div>
+      <div style="font-weight:700;font-size:13px;">GRAB & LOG</div>
+      <div style="font-size:9px;color:var(--muted);">TOOL ROOM 5.1</div>
+    </div>
+  </div>
+  <form method="get" style="flex:1;max-width:360px;margin:0 20px;">
+    <input class="search-input" type="text" name="q" value="@Model.Search" placeholder="Search tool catalog, ID, location…" style="width:100%;" />
+  </form>
+<div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+    <button type="button" id="btn-install-app" onclick="installWebApp()" style="background:#ffcc00;border:none;color:#111;border-radius:7px;padding:8px 12px;font-size:11px;font-weight:600;cursor:pointer;">Download app</button>
+    <button type="button" id="btn-enable-desktop" onclick="enableDesktopNotifs()" style="background:none;border:1px solid #2a2a2a;color:#8a8a8a;border-radius:7px;padding:8px 10px;font-size:11px;cursor:pointer;">Enable PC alerts</button>
+    <a href="/Operators" class="user" style="text-decoration:none;color:inherit;margin-left:0;">
+      <div style="text-align:right;line-height:1.3;">
+        <div style="font-weight:600;">@name</div>
+        <div style="font-size:10px;color:var(--muted);">@(Model.IsAdmin ? "ADMIN" : "MEMBER") · #@Model.OpId</div>
+      </div>
+      <div class="avatar">@initials</div>
+    </a>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="nav-label">NAVIGATION</div>
+    <a class="nav-btn active" href="/Inventory">📦 Inventory</a>
+    @if (Model.IsAdmin)
+    {
+      <a class="nav-btn" href="/Registry">📋 Control Registry</a>
+      <a class="nav-btn" href="/Logs">📜 Activity Logs</a>
+    }
+    <a class="nav-btn" href="/Alerts">🚨 Alerts Desk</a>
+    @if (Model.IsAdmin)
+    {
+      <a class="nav-btn" href="/Operators">👥 Member Registry</a>
+    }
+    <div class="sidebar-foot">@(Model.IsAdmin ? "ADMIN MODE" : "MEMBER MODE") · SYSTEM</div>
+  </div>
+
+  <div class="content">
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+      <div style="background:rgba(239,68,68,0.2);border:1px solid #ef4444;border-radius:8px;padding:14px;margin-bottom:16px;color:#ef4444;">
+        <strong>Error:</strong> @Model.Error
+      </div>
+    }
+
+    <div class="panel-top">
+      <div class="tabs">
+        <a class="tab @(Model.Filter=="all"?"active":"")" href="/Inventory?filter=all&q=@Model.Search">All (@Model.Total)</a>
+        <a class="tab @(Model.Filter=="available"?"active":"")" href="/Inventory?filter=available&q=@Model.Search">Available (@Model.Available)</a>
+        <a class="tab @(Model.Filter=="inuse"?"active":"")" href="/Inventory?filter=inuse&q=@Model.Search">In Use (@Model.InUse)</a>
+        <a class="tab @(Model.Filter=="overdue"?"active":"")" href="/Inventory?filter=overdue&q=@Model.Search">Overdue (@Model.Overdue)</a>
+      </div>
+      <div class="online"><div class="dot"></div> SYSTEM ONLINE</div>
+    </div>
+
+    @if (Model.Tools == null || Model.Tools.Count == 0)
+    {
+      <div style="background:#161616;border:1px solid #2a2a2a;border-radius:10px;padding:32px;text-align:center;color:#8a8a8a;">
+        No tools to show.
+        @if (string.IsNullOrEmpty(Model.Error))
+        {
+          <div style="margin-top:8px;font-size:12px;">If this is unexpected, check Supabase tools table or try refresh.</div>
+        }
+      </div>
+    }
+    else
+    {
+      <div class="cards">
+        @foreach (var t in Model.Tools)
+        {
+          <div class="card @(t.Status != "disposed" ? "accent" : "")">
+            <div class="card-top">
+              <div>
+                <div class="card-id">@t.Id</div>
+                <div class="card-name">@t.Name</div>
+              </div>
+              <div class="card-icon">@t.Icon</div>
+            </div>
+            <span class="badge @t.Status">@t.Status.ToUpper()</span>
+            <div class="card-meta">
+              STORAGE LOCATION<br /><span class="val">@t.Location</span>
+              @if (!string.IsNullOrEmpty(t.LoggedTo))
+              {
+                <br /><span style="color:var(--muted)">LOGGED: @t.LoggedTo</span>
+              }
+              @if (t.Status == "inuse" || t.Status == "overdue")
+              {
+                var hrs = GrabLog.Services.ToolService.HoursUntilOverdue(t);
+                if (hrs <= 0)
+                {
+                  <br /><span style="color:var(--red);font-weight:600;">OVERDUE (past 9h shift)</span>
+                }
+                else
+                {
+                  <br /><span style="color:var(--muted)">Due in @hrs.ToString("0.0")h</span>
+                }
+              }
+            </div>
+            @if (t.Status == "available")
+            {
+              <form method="post" asp-page-handler="Borrow">
+                <input type="hidden" name="id" value="@t.Id" />
+                <button type="submit" class="btn-borrow">BORROW TOOL</button>
+              </form>
+            }
+            else if (t.Status == "inuse" || t.Status == "overdue")
+            {
+              <form method="post" asp-page-handler="Return">
+                <input type="hidden" name="id" value="@t.Id" />
+                <button type="submit" class="btn-return" style="background:#ef4444;color:#fff;">RETURN</button>
+              </form>
+            }
+            else
+            {
+              <button class="btn-sm" disabled style="opacity:0.5;width:100%;">UNAVAILABLE</button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

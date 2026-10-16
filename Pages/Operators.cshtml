@@ -1,0 +1,83 @@
+@page
+@model OperatorsModel
+@{
+    ViewData["Title"] = Model.IsAdmin ? "Member Registry" : "My Profile";
+}
+
+<div class="topbar">
+  <div class="brand">
+    <img src="~/logo.png" class="logo-img sm" alt="" />
+    <div>
+      <div style="font-weight:700;font-size:13px;">GRAB & LOG</div>
+      <div style="font-size:9px;color:var(--muted);">TOOL ROOM 5.1</div>
+    </div>
+  </div>
+  <a href="/Operators" class="user" style="text-decoration:none;color:inherit;">
+    <div style="text-align:right;line-height:1.3;">
+      <div style="font-weight:600;">@Model.UserName</div>
+      <div style="font-size:10px;color:var(--muted);">@(Model.IsAdmin ? "ADMIN" : "MEMBER") · #@Model.OpId</div>
+    </div>
+    <div class="avatar">@Model.Initials</div>
+  </a>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="nav-label">NAVIGATION</div>
+    <a class="nav-btn" href="/Inventory">📦 Inventory</a>
+    @if (Model.IsAdmin)
+    {
+      <a class="nav-btn" href="/Registry">📋 Control Registry</a>
+      <a class="nav-btn" href="/Logs">📜 Activity Logs</a>
+    }
+    <a class="nav-btn" href="/Alerts">🚨 Alerts Desk</a>
+    @if (Model.IsAdmin)
+    {
+      <a class="nav-btn active" href="/Operators">👥 Member Registry</a>
+    }
+    <div class="sidebar-foot">@(Model.IsAdmin ? "ADMIN MODE" : "MEMBER MODE") · SYSTEM</div>
+  </div>
+  <div class="content">
+    <div style="margin-bottom:16px;">
+      <h2 style="font-size:20px;color:#f0f0f0;">@(Model.IsAdmin ? "Member Registry" : "My Profile")</h2>
+      <p style="font-size:12px;color:#8a8a8a;">@(Model.IsAdmin ? "All accounts" : "Your account")</p>
+    </div>
+    <div class="card" style="max-width:420px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <div class="avatar" style="width:40px;height:40px;font-size:14px;">@Model.Initials</div>
+        <div>
+          <div style="font-weight:600;font-size:15px;color:#f0f0f0;">@Model.UserName</div>
+          <div style="font-size:12px;color:#8a8a8a;">@Model.UserEmail</div>
+        </div>
+      </div>
+      <div class="card-meta">
+        ROLE<br /><span class="val">@(Model.IsAdmin ? "ADMIN" : "MEMBER")</span><br /><br />
+        ID<br /><span class="val">#@Model.OpId</span>
+      </div>
+      <form method="post" asp-page-handler="Logout">
+        <button type="submit" class="btn-sm" style="width:100%;margin-top:12px;">Sign Out</button>
+      </form>
+    </div>
+    @if (Model.IsAdmin)
+    {
+      <div style="font-size:11px;color:#8a8a8a;margin-bottom:10px;">ALL ACCOUNTS (@Model.AllMembers.Count)</div>
+      @if (Model.AllMembers.Count == 0)
+      {
+        <div style="background:#161616;border:1px solid #2a2a2a;border-radius:10px;padding:24px;text-align:center;color:#8a8a8a;">No other accounts loaded.</div>
+      }
+      else
+      {
+        <div class="cards" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));">
+          @foreach (var m in Model.AllMembers)
+          {
+            <div class="card">
+              <div style="font-weight:600;color:#f0f0f0;">@m.Name</div>
+              <div style="font-size:12px;color:#8a8a8a;margin:4px 0;">@m.Email</div>
+              <span class="badge @(m.Role=="admin"?"inuse":"available")">@(m.Role?.ToUpper() ?? "MEMBER")</span>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>
