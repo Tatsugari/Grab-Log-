@@ -2,7 +2,6 @@ using GrabLog.Services;
 using Microsoft.AspNetCore.StaticFiles;
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Services.AddRazorPages();
 builder.Services.AddHttpClient<SupabaseClient>();
 builder.Services.AddScoped<LogService>();
@@ -18,7 +17,6 @@ var app = builder.Build();
 var contentTypes = new FileExtensionContentTypeProvider();
 contentTypes.Mappings[".webmanifest"] = "application/manifest+json";
 app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = contentTypes });
-
 app.UseRouting();
 app.UseSession();
 app.MapRazorPages();
@@ -28,7 +26,6 @@ app.MapGet("/api/notifications", async (HttpContext ctx, NotificationService not
     var email = ctx.Session.GetString("UserEmail");
     if (string.IsNullOrEmpty(email))
         return Results.Unauthorized();
-
     var role = ctx.Session.GetString("UserRole") ?? "member";
     try
     {
@@ -51,4 +48,4 @@ app.MapGet("/api/notifications", async (HttpContext ctx, NotificationService not
     }
 });
 
-app.Run("http://localhost:5000");
+app.Run();
