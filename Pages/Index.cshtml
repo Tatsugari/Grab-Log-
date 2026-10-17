@@ -98,18 +98,12 @@ async function handleAuthSubmit(event) {
             }
         });
 
-        const htmlText = await response.text();
-
-        // If the login was successful, the server redirects to Inventory. 
-        // We load the inventory HTML directly into the document view cleanly.
-        if (response.redirected || response.url.includes('Inventory') || !htmlText.includes('auth-card')) {
-            document.open();
-            document.write(htmlText);
-            document.close();
+        if (response.redirected) {
+            window.location.href = response.url;
             return;
         }
 
-        // If it failed, parse the returned page for error messages
+        const htmlText = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, 'text/html');
         const newErrMsg = doc.getElementById('js-msg-err');
