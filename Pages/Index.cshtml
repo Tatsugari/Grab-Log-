@@ -4,35 +4,35 @@
     ViewData["Title"] = "Kiosk Dashboard";
 }
 
-<div class="text-center mt-5">
-    <h2>GrabLog Kiosk Panel</h2>
-    <p class="text-muted">Select an action or scan your RFID card.</p>
+<div class="container mt-5">
+    <div class="text-center">
+        <h1 class="display-4">GrabLog Kiosk Panel</h1>
+        <p class="text-muted">Select an action or scan your RFID card.</p>
 
-    <!-- Kiosk Action Buttons -->
-    <div class="mt-4">
-        <button type="button" class="btn btn-success btn-lg mx-2" onclick="triggerKioskAction('BORROW')">Borrow Tool</button>
-        <button type="button" class="btn btn-danger btn-lg mx-2" onclick="triggerKioskAction('RETURN')">Return Tool</button>
+        <!-- Kiosk Action Buttons -->
+        <div class="mt-4">
+            <button type="button" class="btn btn-success btn-lg mx-2" onclick="triggerKioskAction('BORROW')">Borrow Tool</button>
+            <button type="button" class="btn btn-danger btn-lg mx-2" onclick="triggerKioskAction('RETURN')">Return Tool</button>
+        </div>
+
+        <!-- Status Message Display Area -->
+        <div id="statusMessage" class="mt-4 alert" style="display: none;"></div>
     </div>
-
-    <!-- Status Message Display Area -->
-    <div id="statusMessage" class="mt-4 alert" style="display: none;"></div>
 </div>
 
-<!-- JavaScript to handle button clicks without reloading the page -->
+<!-- JavaScript to handle button clicks without refreshing the page -->
 <script>
 async function triggerKioskAction(actionType) {
     const statusDiv = document.getElementById('statusMessage');
     
-    // Default payload using your system configuration
     const payload = {
-        CardUID: "DEFAULT_UID", // Replace or grab dynamically if using physical reader input
+        CardUID: "DEFAULT_UID", // Will be replaced/sent by your RFID scanner logic later
         UserName: "Member1",
         ActionType: actionType,
         ToolId: "TOOL-01"
     };
 
     try {
-        // Sends request to your KioskApiController without refreshing the page
         let response = await fetch('/api/kiosk/transaction', {
             method: 'POST',
             headers: {
@@ -43,19 +43,23 @@ async function triggerKioskAction(actionType) {
 
         let result = await response.json();
         
-        statusDiv.style.display = 'block';
-        if (response.ok && result.success) {
-            statusDiv.className = 'mt-4 alert alert-success';
-            statusDiv.innerText = result.message;
-        } else {
-            statusDiv.className = 'mt-4 alert alert-danger';
-            statusDiv.innerText = "Error: " + (result.message || "Transaction failed.");
+        if (statusDiv) {
+            statusDiv.style.display = 'block';
+            if (response.ok && result.success) {
+                statusDiv.className = 'mt-4 alert alert-success';
+                statusDiv.innerText = result.message;
+            } else {
+                statusDiv.className = 'mt-4 alert alert-danger';
+                statusDiv.innerText = "Error: " + (result.message || "Transaction failed.");
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        statusDiv.style.display = 'block';
-        statusDiv.className = 'mt-4 alert alert-danger';
-        statusDiv.innerText = "Network error connecting to server.";
+        if (statusDiv) {
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'mt-4 alert alert-danger';
+            statusDiv.innerText = "Network error connecting to server.";
+        }
     }
 }
 </script>
