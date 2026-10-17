@@ -1,6 +1,8 @@
 window.Kiosk = (function () {
-    let port, writer, reader;
-    let activeFormToSubmit = null;
+    let port = null;
+    let writer = null;
+    let reader = null;
+    let pendingForm = null;
  
     async function connect() {
         const statusEl = document.getElementById('kiosk-status');
@@ -14,62 +16,66 @@ window.Kiosk = (function () {
  
             const textEncoder = new TextEncoderStream();
             textEncoder.readable.pipeTo(port.writable);
-            writer = textEncoder.writable.getWriter();
+            writer = textEncoder.readable.getWriter();
  
             if (statusEl) {
                 statusEl.textContent = "Connected (Ready)";
-                statusEl.style.color = "#22c55e";
+                statusEl.style.color = "#22c55e"; // Green
             }
  
-            // Attach event listeners to all Borrow/Return buttons on the page
-            setupFormInterceptors();
+            // Intercept form button clicks so the page doesn't reload before scanning
+            setupInterceptors();
             listenToESP32();
         } catch (err) {
-            console.error("Serial error:", err);
+            console.error("Serial connection error:", err);
             if (statusEl) {
                 statusEl.textContent = "Connection failed";
-                statusEl.style.color = "#ef4444";
+                statusEl.style.color = "#ef4444"; // Red
             }
         }
     }
  
-    function setupFormInterceptors() {
-        // Intercept all Borrow and Return form buttons
+    function setupInterceptors() {
+        // Intercept both BORROW TOOL and RETURN buttons
         document.querySelectorAll('.btn-borrow, .btn-return').forEach(button => {
-            button.type = "button"; // Prevent immediate page reload/submit
-            button.addEventListener('click', (e) => {
+            button.addEventListener('click', function (e) {
+                // Prevent immediate page reload / ASP.NET form submit
                 e.preventDefault();
                 e.stopPropagation();
  
-                const form = button.closest('form');
-                activeFormToSubmit = form;
- 
-                const isBorrow = button.classList.contains('btn-borrow');
-                const command = isBorrow ? 'ARM_BORROW' : 'ARM_RETURN';
- 
-                const toolEl = document.getElementById('kiosk-selected-tool');
-                if (toolEl) {
-                    toolEl.textContent = `Kiosk Armed (${isBorrow ? 'BORROW' : 'RETURN'}) - Scan RFID Card Now!`;
-                    toolEl.style.color = "#ffcc00";
+                if (!writer) {
+                    alert("Please click 'Connect Kiosk' on the top bar first!");
+                    return;
                 }
  
-                // Send ARM command to ESP32 over Serial
-                armKiosk(command);
+                const form = button.closest('form');
+                const card = button.closest('.card');
+                const toolId = card ? card.getAttribute('data-tool-id') : 'TOOL';
+                const isBorrow = button.classList.contains('btn-borrow');
+                const command = isBorrow ? 'ARM_BORROW\n' : 'ARM_RETURN\n';
+ 
+                pendingForm = form;
+ 
+                // Send ARM_BORROW or ARM_RETURN command over USB to ESP32
+                sendSerial(command);
+ 
+                const infoEl = document.getElementById('kiosk-selected-tool');
+                if (infoEl) {
+                    infoEl.textContent = `Kiosk Armed (${isBorrow ? 'BORROW' : 'RETURN'} ${toolId}) — Scan RFID Card Now!`;
+                    infoEl.style.color = "#ffcc00";
+                }
             });
         });
     }
  
     function setSelectedTool(toolId) {
-        // Highlight tool selection on screen if needed
-        console.log("Selected tool:", toolId);
+        console.log("Tool container selected:", toolId);
     }
  
-    async function armKiosk(command) {
+    async function sendSerial(cmd) {
         if (writer) {
-            await writer.write(command + '\n');
-            console.log("Sent to ESP32:", command);
-        } else {
-            alert("Please click 'Connect Kiosk' first!");
+            await writer.write(cmd);
+            console.log("Sent to ESP32:", cmd.trim());
         }
     }
  
@@ -81,22 +87,32 @@ window.Kiosk = (function () {
             if (value) {
                 buffer += value;
                 let lines = buffer.split('\n');
-                buffer = lines.pop(); // keep buffer tail
+                buffer = lines.pop(); // Keep trailing incomplete buffer
  
                 for (let line of lines) {
                     line = line.trim();
-                    console.log("ESP32:", line);
+                    console.log("[ESP32]:", line);
  
-                    // Received success signal from ESP32: "TX_SUCCESS:6A5E8CA5:Ednice:BORROW"
+                    // Received success string from ESP32: "TX_SUCCESS:6A5E8CA5:Ednice:BORROW"
                     if (line.startsWith("TX_SUCCESS:")) {
-                        if (activeFormToSubmit) {
-                            const statusEl = document.getElementById('kiosk-status');
-                            if (statusEl) statusEl.textContent = "Scan Verified! Submitting...";
+                        const infoEl = document.getElementById('kiosk-selected-tool');
+                        if (infoEl) {
+                            infoEl.textContent = "RFID Verified! Updating database...";
+                            infoEl.style.color = "#22c55e";
+                        }
  
-                            // Now submit the ASP.NET Razor form to update SQL Database
-                            activeFormToSubmit.submit();
+                        if (pendingForm) {
+                            // Automatically submit the Razor form to save to SQL Database & update UI
+                            pendingForm.submit();
+                            pendingForm = null;
                         } else {
-                            alert("RFID Scanned, but no tool button was clicked first!");
+                            alert("RFID Scanned! Click a Borrow or Return button to select a tool.");
+                        }
+                    } else if (line.startsWith("TX_DENIED")) {
+                        const infoEl = document.getElementById('kiosk-selected-tool');
+                        if (infoEl) {
+                            infoEl.textContent = "Access Denied — Unregistered Card";
+                            infoEl.style.color = "#ef4444";
                         }
                     }
                 }
