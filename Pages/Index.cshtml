@@ -2,7 +2,6 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Login";
-    ViewData["Title"] = "Kiosk Dashboard";
 }
 
 <div class="auth-screen">
@@ -14,14 +13,6 @@
         <div class="logo-title">GRAB & LOG</div>
         <div class="logo-sub">TOOL ROOM 5.1</div>
       </div>
-<div class="text-center mt-5">
-    <h2>GrabLog Kiosk Panel</h2>
-    <p class="text-muted">Select an action or scan your RFID card.</p>
-
-    <!-- Kiosk Action Buttons -->
-    <div class="mt-4">
-        <button type="button" class="btn btn-success btn-lg mx-2" onclick="triggerKioskAction('BORROW')">Borrow Tool</button>
-        <button type="button" class="btn btn-danger btn-lg mx-2" onclick="triggerKioskAction('RETURN')">Return Tool</button>
     </div>
 
     @if (Model.Mode == "welcome")
@@ -87,42 +78,6 @@
         @if (!string.IsNullOrEmpty(Model.Message))
         {
           <p class="msg-err">@Model.Message</p>
-    <!-- Status Message Display Area -->
-    <div id="statusMessage" class="mt-4 alert" style="display: none;"></div>
-</div>
-
-<!-- JavaScript to handle button clicks without reloading the page -->
-<script>
-async function triggerKioskAction(actionType) {
-    const statusDiv = document.getElementById('statusMessage');
-    
-    // Default payload using your system configuration
-    const payload = {
-        CardUID: "DEFAULT_UID", // Replace or grab dynamically if using physical reader input
-        UserName: "Member1",
-        ActionType: actionType,
-        ToolId: "TOOL-01"
-    };
-
-    try {
-        // Sends request to your KioskApiController without refreshing the page
-        let response = await fetch('/api/kiosk/transaction', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        let result = await response.json();
-        
-        statusDiv.style.display = 'block';
-        if (response.ok && result.success) {
-            statusDiv.className = 'mt-4 alert alert-success';
-            statusDiv.innerText = result.message;
-        } else {
-            statusDiv.className = 'mt-4 alert alert-danger';
-            statusDiv.innerText = "Error: " + (result.message || "Transaction failed.");
         }
         <button type="submit" class="btn-yellow">Sign in to inventory</button>
       </form>
@@ -131,13 +86,6 @@ async function triggerKioskAction(actionType) {
         &nbsp;·&nbsp;
         <a href="/?mode=welcome">Create Account ›</a>
       </p>
-    } catch (error) {
-        console.error('Error:', error);
-        statusDiv.style.display = 'block';
-        statusDiv.className = 'mt-4 alert alert-danger';
-        statusDiv.innerText = "Network error connecting to server.";
     }
   </div>
 </div>
-}
-</script>
