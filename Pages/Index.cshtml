@@ -83,7 +83,7 @@
 
 <script>
 async function handleAuthSubmit(event) {
-    // 1. Stop the browser from reloading the page
+    // 1. Stop the browser from doing a native form submit / reload
     event.preventDefault();
 
     const form = event.target;
@@ -91,7 +91,7 @@ async function handleAuthSubmit(event) {
     const errDisplay = document.getElementById('js-msg-err');
 
     try {
-        // 2. Submit data asynchronously in the background
+        // 2. Send the request silently in the background
         const response = await fetch(form.action || window.location.href, {
             method: 'POST',
             body: formData,
@@ -100,19 +100,28 @@ async function handleAuthSubmit(event) {
             }
         });
 
-        if (response.redirected) {
-            // If the login/registration was successful and redirected (e.g. to /Inventory)
-            window.location.href = response.url;
-        } else {
-            // If there was a validation error or incorrect password
-            const text = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(text, 'text/html');
-            const newErrMsg = doc.getElementById('js-msg-err');
+        const htmlText = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
 
-            if (errDisplay && newErrMsg) {
+        // 3. Check if there is an error message in the response
+        const newErrMsg = doc.getElementById('js-msg-err');
+        const newAuthCard = doc.querySelector('.auth-card');
+
+        if (newErrMsg && newErrMsg.innerText.trim() !== '') {
+            // Validation or login error: update error text inline without reloading
+            if (errDisplay) {
                 errDisplay.innerText = newErrMsg.innerText;
             }
+        } else if (newAuthCard) {
+            // If it's a mode change (e.g., switching between login/register), swap the card content smoothly
+            document.querySelector('.auth-card').innerHTML = newAuthCard.innerHTML;
+        } else {
+            // Successful login: load the next page content dynamically into the current DOM 
+            // WITHOUT triggering a browser reload or breaking your ESP32 connection session!
+            document.open();
+            document.write(htmlText);
+            document.close();
         }
     } catch (err) {
         console.error('Submission error:', err);
