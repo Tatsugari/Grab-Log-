@@ -1,31 +1,33 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Kiosk Dashboard";
+    ViewData["Title"] = "GrabLog Kiosk";
 }
 
-<div class="text-center px-4 py-5">
-    <h1 class="display-4 fw-bold">GrabLog Kiosk Panel</h1>
-    <p class="lead text-muted">Select an action below or scan your RFID card on the kiosk.</p>
+<!-- Your Original Page Content / Layout Container -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12 text-center">
+            <h1>GrabLog Kiosk Panel</h1>
+            <p class="text-muted">Select an action or scan your RFID card.</p>
 
-    <!-- Kiosk Action Buttons -->
-    <div class="mt-4">
-        <button type="button" class="btn btn-success btn-lg px-5 py-3 mx-2 fw-bold" onclick="triggerKioskAction('BORROW')">
-            Borrow Tool
-        </button>
-        <button type="button" class="btn btn-danger btn-lg px-5 py-3 mx-2 fw-bold" onclick="triggerKioskAction('RETURN')">
-            Return Tool
-        </button>
-    </div>
+            <!-- Kiosk Action Buttons -->
+            <div class="my-4">
+                <button type="button" class="btn btn-success btn-lg mx-2" onclick="triggerKioskAction('BORROW')">
+                    Borrow Tool
+                </button>
+                <button type="button" class="btn btn-danger btn-lg mx-2" onclick="triggerKioskAction('RETURN')">
+                    Return Tool
+                </button>
+            </div>
 
-    <!-- Status Notification Area -->
-    <div class="row justify-content-center mt-4">
-        <div class="col-md-6">
-            <div id="statusMessage" class="alert" style="display: none;" role="alert"></div>
+            <!-- Status message container -->
+            <div id="statusMessage" class="alert mt-3" style="display: none;" role="alert"></div>
         </div>
     </div>
 </div>
 
+<!-- JavaScript to stop page reloads and send requests in the background -->
 <script>
 async function triggerKioskAction(actionType) {
     const statusDiv = document.getElementById('statusMessage');
