@@ -29,7 +29,10 @@
           <option value="member">Member</option>
           <option value="admin">Admin</option>
         </select>
-        <p id="js-msg-err" class="msg-err">@Model.Message</p>
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+          <p class="msg-err">@Model.Message</p>
+        }
         <button type="submit" class="btn-yellow">Create Account</button>
       </form>
       <p class="auth-links">
@@ -49,7 +52,10 @@
         <input type="email" name="Email" value="@Model.Email" placeholder="admin@company.com" required />
         <label>PIN / PASSWORD</label>
         <input type="password" name="Pin" placeholder="••••••••" required />
-        <p id="js-msg-err" class="msg-err">@Model.Message</p>
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+          <p class="msg-err">@Model.Message</p>
+        }
         <button type="submit" class="btn-yellow">Sign in as Admin</button>
       </form>
       <p class="auth-links">
@@ -69,7 +75,10 @@
         <p class="hint">Use the email connected to your member profile.</p>
         <label>PIN / PASSWORD</label>
         <input type="password" name="Pin" placeholder="••••••••" required />
-        <p id="js-msg-err" class="msg-err">@Model.Message</p>
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+          <p class="msg-err">@Model.Message</p>
+        }
         <button type="submit" class="btn-yellow">Sign in to inventory</button>
       </form>
       <p class="auth-links">
