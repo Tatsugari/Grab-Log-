@@ -1,28 +1,27 @@
 @page
 @model IndexModel
 @{
-    Layout = "_Layout";
-    ViewData["Title"] = "GrabLog Kiosk";
+    ViewData["Title"] = "Kiosk Dashboard";
 }
 
-<div class="container py-5">
-    <div class="card shadow-sm mx-auto" style="max-width: 600px;">
-        <div class="card-body text-center p-4">
-            <h2 class="card-title mb-3">GrabLog Kiosk Panel</h2>
-            <p class="text-muted mb-4">Select an action below or scan an RFID card on the kiosk.</p>
+<div class="text-center px-4 py-5">
+    <h1 class="display-4 fw-bold">GrabLog Kiosk Panel</h1>
+    <p class="lead text-muted">Select an action below or scan your RFID card on the kiosk.</p>
 
-            <!-- Kiosk Action Buttons -->
-            <div class="d-flex justify-content-center gap-3 mb-3">
-                <button type="button" class="btn btn-success btn-lg px-4" onclick="triggerKioskAction('BORROW')">
-                    Borrow Tool
-                </button>
-                <button type="button" class="btn btn-danger btn-lg px-4" onclick="triggerKioskAction('RETURN')">
-                    Return Tool
-                </button>
-            </div>
+    <!-- Kiosk Action Buttons -->
+    <div class="mt-4">
+        <button type="button" class="btn btn-success btn-lg px-5 py-3 mx-2 fw-bold" onclick="triggerKioskAction('BORROW')">
+            Borrow Tool
+        </button>
+        <button type="button" class="btn btn-danger btn-lg px-5 py-3 mx-2 fw-bold" onclick="triggerKioskAction('RETURN')">
+            Return Tool
+        </button>
+    </div>
 
-            <!-- Status Notification Area -->
-            <div id="statusMessage" class="alert mt-3" style="display: none;" role="alert"></div>
+    <!-- Status Notification Area -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-6">
+            <div id="statusMessage" class="alert" style="display: none;" role="alert"></div>
         </div>
     </div>
 </div>
