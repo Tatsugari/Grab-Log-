@@ -19,7 +19,7 @@
     {
       <h1>Welcome</h1>
       <p class="auth-desc">Create a Member or Admin account for the tool room.</p>
-      <form method="post" asp-page-handler="Register">
+      <form id="authForm" method="post" asp-page-handler="Register" onsubmit="handleAuthSubmit(event)">
         <label>EMAIL</label>
         <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
         <label>PIN / PASSWORD</label>
@@ -29,10 +29,7 @@
           <option value="member">Member</option>
           <option value="admin">Admin</option>
         </select>
-        @if (!string.IsNullOrEmpty(Model.Message))
-        {
-          <p class="msg-err">@Model.Message</p>
-        }
+        <p id="js-msg-err" class="msg-err">@Model.Message</p>
         <button type="submit" class="btn-yellow">Create Account</button>
       </form>
       <p class="auth-links">
@@ -46,16 +43,13 @@
     {
       <h1>Admin Login</h1>
       <p class="auth-desc">Sign in as Admin to manage inventory, returns, disposals, and restore tools.</p>
-      <form method="post" asp-page-handler="Login">
+      <form id="authForm" method="post" asp-page-handler="Login" onsubmit="handleAuthSubmit(event)">
         <input type="hidden" name="Role" value="admin" />
         <label>ADMIN EMAIL</label>
         <input type="email" name="Email" value="@Model.Email" placeholder="admin@company.com" required />
         <label>PIN / PASSWORD</label>
         <input type="password" name="Pin" placeholder="••••••••" required />
-        @if (!string.IsNullOrEmpty(Model.Message))
-        {
-          <p class="msg-err">@Model.Message</p>
-        }
+        <p id="js-msg-err" class="msg-err">@Model.Message</p>
         <button type="submit" class="btn-yellow">Sign in as Admin</button>
       </form>
       <p class="auth-links">
@@ -68,17 +62,14 @@
     {
       <h1>Member Login</h1>
       <p class="auth-desc">Sign in as a Member to borrow and return tools from the inventory.</p>
-      <form method="post" asp-page-handler="Login">
+      <form id="authForm" method="post" asp-page-handler="Login" onsubmit="handleAuthSubmit(event)">
         <input type="hidden" name="Role" value="member" />
         <label>MEMBER EMAIL</label>
         <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
         <p class="hint">Use the email connected to your member profile.</p>
         <label>PIN / PASSWORD</label>
         <input type="password" name="Pin" placeholder="••••••••" required />
-        @if (!string.IsNullOrEmpty(Model.Message))
-        {
-          <p class="msg-err">@Model.Message</p>
-        }
+        <p id="js-msg-err" class="msg-err">@Model.Message</p>
         <button type="submit" class="btn-yellow">Sign in to inventory</button>
       </form>
       <p class="auth-links">
@@ -89,3 +80,45 @@
     }
   </div>
 </div>
+
+<script>
+async function handleAuthSubmit(event) {
+    // 1. Stop the browser from reloading the page
+    event.preventDefault();
+
+    const form = event.target;
+    const formData = new FormData(form);
+    const errDisplay = document.getElementById('js-msg-err');
+
+    try {
+        // 2. Submit data asynchronously in the background
+        const response = await fetch(form.action || window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (response.redirected) {
+            // If the login/registration was successful and redirected (e.g. to /Inventory)
+            window.location.href = response.url;
+        } else {
+            // If there was a validation error or incorrect password
+            const text = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            const newErrMsg = doc.getElementById('js-msg-err');
+
+            if (errDisplay && newErrMsg) {
+                errDisplay.innerText = newErrMsg.innerText;
+            }
+        }
+    } catch (err) {
+        console.error('Submission error:', err);
+        if (errDisplay) {
+            errDisplay.innerText = 'Error submitting request. Please try again.';
+        }
+    }
+}
+</script>
