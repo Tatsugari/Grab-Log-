@@ -4,95 +4,78 @@
     ViewData["Title"] = "Login";
 }
 
-<div style="background: #0a0a0a; min-height: 100vh; display: flex; justify-content: center; align-items: center; font-family: sans-serif; padding: 20px;">
-  <div style="background: #141414; border: 1px solid #2a2a2a; border-radius: 12px; padding: 30px; width: 100%; max-width: 420px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); position: relative; overflow: hidden; color: #f0f0f0;">
-    
-    <!-- Hazard Stripe -->
-    <div style="position: absolute; top: 0; left: 0; right: 0; height: 6px; background: repeating-linear-gradient(45deg, #facc15, #facc15 10px, #141414 10px, #141414 20px);"></div>
-    
-    <!-- Logo Header -->
-    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; margin-top: 5px;">
-      <img src="~/logo.png" alt="Logo" style="width: 45px; height: 45px; object-fit: contain;" />
+<div class="auth-screen">
+  <div class="auth-card">
+    <div class="hazard-stripe"></div>
+    <div class="auth-logo">
+      <img src="~/logo.png" alt="Logo" class="logo-img" />
       <div>
-        <div style="font-weight: 800; font-size: 16px; letter-spacing: 0.5px; color: #fff;">GRAB & LOG</div>
-        <div style="font-size: 11px; color: #888; letter-spacing: 1px;">TOOL ROOM 5.1</div>
+        <div class="logo-title">GRAB & LOG</div>
+        <div class="logo-sub">TOOL ROOM 5.1</div>
       </div>
     </div>
 
     @if (Model.Mode == "welcome")
     {
-      <h1 style="font-size: 22px; font-weight: 700; margin-bottom: 8px; color: #fff;">Welcome</h1>
-      <p style="font-size: 13px; color: #aaa; margin-bottom: 20px;">Create a Member or Admin account for the tool room.</p>
-      
+      <h1>Welcome</h1>
+      <p class="auth-desc">Create a Member or Admin account for the tool room.</p>
       <form method="post" asp-page-handler="Register">
-        <label style="font-size: 11px; font-weight: 700; color: #888; display: block; margin-bottom: 6px;">EMAIL</label>
-        <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required style="width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 7px; padding: 11px 12px; color: #f0f0f0; font-size: 13px; margin-bottom: 15px; box-sizing: border-box;" />
-        
-        <label style="font-size: 11px; font-weight: 700; color: #888; display: block; margin-bottom: 6px;">PIN / PASSWORD</label>
-        <input type="password" name="Pin" placeholder="••••••••" required style="width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 7px; padding: 11px 12px; color: #f0f0f0; font-size: 13px; margin-bottom: 15px; box-sizing: border-box;" />
-        
-        <label style="font-size: 11px; font-weight: 700; color: #888; display: block; margin-bottom: 6px;">ACCOUNT TYPE</label>
-        <select name="Role" style="width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 7px; padding: 11px 12px; color: #f0f0f0; font-size: 13px; margin-bottom: 15px; box-sizing: border-box;">
+        <label>EMAIL</label>
+        <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
+        <label>PIN / PASSWORD</label>
+        <input type="password" name="Pin" placeholder="••••••••" required />
+        <label>ACCOUNT TYPE</label>
+        <select name="Role" style="width:100%;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:7px;padding:11px 12px;color:#f0f0f0;font-size:13px;">
           <option value="member">Member</option>
           <option value="admin">Admin</option>
         </select>
-        
-        <p style="color: #ef4444; font-size: 12px; margin-bottom: 15px;">@Model.Message</p>
-        <button type="submit" style="width: 100%; background: #facc15; color: #000; font-weight: 700; border: none; border-radius: 7px; padding: 12px; font-size: 14px; cursor: pointer;">Create Account</button>
+        <p id="js-msg-err" class="msg-err">@Model.Message</p>
+        <button type="submit" class="btn-yellow">Create Account</button>
       </form>
-      
-      <p style="text-align: center; font-size: 12px; color: #888; margin-top: 20px; line-height: 1.5;">
+      <p class="auth-links">
         Already have an account?<br/>
-        <a href="/?mode=member" style="color: #facc15; text-decoration: none;">Member Log In ›</a>
+        <a href="/?mode=member">Member Log In ›</a>
         &nbsp;·&nbsp;
-        <a href="/?mode=admin" style="color: #facc15; text-decoration: none;">Admin Log In ›</a>
+        <a href="/?mode=admin">Admin Log In ›</a>
       </p>
     }
     else if (Model.Mode == "admin")
     {
-      <h1 style="font-size: 22px; font-weight: 700; margin-bottom: 8px; color: #fff;">Admin Login</h1>
-      <p style="font-size: 13px; color: #aaa; margin-bottom: 20px;">Sign in as Admin to manage inventory, returns, disposals, and restore tools.</p>
-      
+      <h1>Admin Login</h1>
+      <p class="auth-desc">Sign in as Admin to manage inventory, returns, disposals, and restore tools.</p>
       <form method="post" asp-page-handler="Login">
         <input type="hidden" name="Role" value="admin" />
-        <label style="font-size: 11px; font-weight: 700; color: #888; display: block; margin-bottom: 6px;">ADMIN EMAIL</label>
-        <input type="email" name="Email" value="@Model.Email" placeholder="admin@company.com" required style="width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 7px; padding: 11px 12px; color: #f0f0f0; font-size: 13px; margin-bottom: 15px; box-sizing: border-box;" />
-        
-        <label style="font-size: 11px; font-weight: 700; color: #888; display: block; margin-bottom: 6px;">PIN / PASSWORD</label>
-        <input type="password" name="Pin" placeholder="••••••••" required style="width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 7px; padding: 11px 12px; color: #f0f0f0; font-size: 13px; margin-bottom: 15px; box-sizing: border-box;" />
-        
-        <p style="color: #ef4444; font-size: 12px; margin-bottom: 15px;">@Model.Message</p>
-        <button type="submit" style="width: 100%; background: #facc15; color: #000; font-weight: 700; border: none; border-radius: 7px; padding: 12px; font-size: 14px; cursor: pointer;">Sign in as Admin</button>
+        <label>ADMIN EMAIL</label>
+        <input type="email" name="Email" value="@Model.Email" placeholder="admin@company.com" required />
+        <label>PIN / PASSWORD</label>
+        <input type="password" name="Pin" placeholder="••••••••" required />
+        <p id="js-msg-err" class="msg-err">@Model.Message</p>
+        <button type="submit" class="btn-yellow">Sign in as Admin</button>
       </form>
-      
-      <p style="text-align: center; font-size: 12px; color: #888; margin-top: 20px;">
-        <a href="/?mode=member" style="color: #facc15; text-decoration: none;">Member Log In ›</a>
+      <p class="auth-links">
+        <a href="/?mode=member">Member Log In ›</a>
         &nbsp;·&nbsp;
-        <a href="/?mode=welcome" style="color: #facc15; text-decoration: none;">Create Account ›</a>
+        <a href="/?mode=welcome">Create Account ›</a>
       </p>
     }
     else
     {
-      <h1 style="font-size: 22px; font-weight: 700; margin-bottom: 8px; color: #fff;">Member Login</h1>
-      <p style="font-size: 13px; color: #aaa; margin-bottom: 20px;">Sign in as a Member to borrow and return tools from the inventory.</p>
-      
+      <h1>Member Login</h1>
+      <p class="auth-desc">Sign in as a Member to borrow and return tools from the inventory.</p>
       <form method="post" asp-page-handler="Login">
         <input type="hidden" name="Role" value="member" />
-        <label style="font-size: 11px; font-weight: 700; color: #888; display: block; margin-bottom: 6px;">MEMBER EMAIL</label>
-        <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required style="width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 7px; padding: 11px 12px; color: #f0f0f0; font-size: 13px; margin-bottom: 8px; box-sizing: border-box;" />
-        <p style="font-size: 11px; color: #666; margin-bottom: 15px;">Use the email connected to your member profile.</p>
-        
-        <label style="font-size: 11px; font-weight: 700; color: #888; display: block; margin-bottom: 6px;">PIN / PASSWORD</label>
-        <input type="password" name="Pin" placeholder="••••••••" required style="width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 7px; padding: 11px 12px; color: #f0f0f0; font-size: 13px; margin-bottom: 15px; box-sizing: border-box;" />
-        
-        <p style="color: #ef4444; font-size: 12px; margin-bottom: 15px;">@Model.Message</p>
-        <button type="submit" style="width: 100%; background: #facc15; color: #000; font-weight: 700; border: none; border-radius: 7px; padding: 12px; font-size: 14px; cursor: pointer;">Sign in to inventory</button>
+        <label>MEMBER EMAIL</label>
+        <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
+        <p class="hint">Use the email connected to your member profile.</p>
+        <label>PIN / PASSWORD</label>
+        <input type="password" name="Pin" placeholder="••••••••" required />
+        <p id="js-msg-err" class="msg-err">@Model.Message</p>
+        <button type="submit" class="btn-yellow">Sign in to inventory</button>
       </form>
-      
-      <p style="text-align: center; font-size: 12px; color: #888; margin-top: 20px;">
-        <a href="/?mode=admin" style="color: #facc15; text-decoration: none;">Admin Log In ›</a>
+      <p class="auth-links">
+        <a href="/?mode=admin">Admin Log In ›</a>
         &nbsp;·&nbsp;
-        <a href="/?mode=welcome" style="color: #facc15; text-decoration: none;">Create Account ›</a>
+        <a href="/?mode=welcome">Create Account ›</a>
       </p>
     }
   </div>
