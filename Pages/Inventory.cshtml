@@ -17,7 +17,7 @@
   <form method="get" style="flex:1;max-width:360px;margin:0 20px;">
     <input class="search-input" type="text" name="q" value="@Model.Search" placeholder="Search tool catalog, ID, location…" style="width:100%;" />
   </form>
-<div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+  <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
     <button type="button" id="btn-install-app" onclick="installWebApp()" style="background:#ffcc00;border:none;color:#111;border-radius:7px;padding:8px 12px;font-size:11px;font-weight:600;cursor:pointer;">Download app</button>
     <button type="button" id="btn-enable-desktop" onclick="enableDesktopNotifs()" style="background:none;border:1px solid #2a2a2a;color:#8a8a8a;border-radius:7px;padding:8px 10px;font-size:11px;cursor:pointer;">Enable PC alerts</button>
     <a href="/Operators" class="user" style="text-decoration:none;color:inherit;margin-left:0;">
@@ -55,6 +55,15 @@
       </div>
     }
 
+    <div id="kiosk-bar" style="background:#161616;border:1px solid #2a2a2a;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+      <div style="font-weight:600;font-size:13px;color:#ffcc00;margin-right:8px;">RFID Kiosk</div>
+      <button type="button" class="btn-sm" onclick="Kiosk.connect()" style="border-color:#ffcc00;color:#ffcc00;">Connect Kiosk</button>
+      <button type="button" class="btn-borrow" style="width:auto;padding:7px 12px;" onclick="Kiosk.arm('BORROW')">Arm Borrow</button>
+      <button type="button" class="btn-return" style="width:auto;padding:7px 12px;background:#ef4444;color:#fff;" onclick="Kiosk.arm('RETURN')">Arm Return</button>
+      <span id="kiosk-selected-tool" style="font-size:11px;color:#8a8a8a;">Click a tool card first, then arm + scan RFID</span>
+      <span id="kiosk-status" style="font-size:11px;color:#8a8a8a;margin-left:auto;">Not connected</span>
+    </div>
+
     <div class="panel-top">
       <div class="tabs">
         <a class="tab @(Model.Filter=="all"?"active":"")" href="/Inventory?filter=all&q=@Model.Search">All (@Model.Total)</a>
@@ -80,7 +89,7 @@
       <div class="cards">
         @foreach (var t in Model.Tools)
         {
-          <div class="card @(t.Status != "disposed" ? "accent" : "")">
+          <div class="card @(t.Status != "disposed" ? "accent" : "")" data-tool-id="@t.Id" onclick="if(window.Kiosk)Kiosk.setSelectedTool('@t.Id')" style="cursor:pointer;">
             <div class="card-top">
               <div>
                 <div class="card-id">@t.Id</div>
@@ -132,3 +141,7 @@
     }
   </div>
 </div>
+
+@section Scripts {
+  <script src="~/js/kiosk.js"></script>
+}
