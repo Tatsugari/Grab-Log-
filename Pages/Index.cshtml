@@ -98,23 +98,28 @@ async function handleAuthSubmit(event) {
             }
         });
 
-        if (response.redirected) {
-            window.location.href = response.url;
-            return;
-        }
-
         const htmlText = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, 'text/html');
         const newErrMsg = doc.getElementById('js-msg-err');
-        const newAuthCard = doc.querySelector('.auth-card');
-
+        
+        // If there's an error message block or text present
         if (newErrMsg && newErrMsg.innerText.trim() !== '') {
             if (errDisplay) {
                 errDisplay.innerText = newErrMsg.innerText;
             }
-        } else if (newAuthCard) {
-            document.querySelector('.auth-card').innerHTML = newAuthCard.innerHTML;
+        } else if (response.redirected || response.url.includes('Inventory') || !doc.querySelector('.auth-card')) {
+            // Successful login: Instead of reloading the page or redirecting via window.location,
+            // we inject the inventory markup directly into the body so the browser context never drops!
+            document.open();
+            document.write(htmlText);
+            document.close();
+        } else {
+            // Mode switching (e.g. member/admin view swaps)
+            const newAuthCard = doc.querySelector('.auth-card');
+            if (newAuthCard) {
+                document.querySelector('.auth-card').innerHTML = newAuthCard.innerHTML;
+            }
         }
     } catch (err) {
         console.error('Submission error:', err);
