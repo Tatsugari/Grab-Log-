@@ -56,11 +56,9 @@
     }
 
     <div id="kiosk-bar" style="background:#161616;border:1px solid #2a2a2a;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-      <div style="font-weight:600;font-size:13px;color:#ffcc00;margin-right:8px;">RFID Kiosk</div>
+      <div style="font-weight:600;font-size:13px;color:#ffcc00;">RFID Kiosk</div>
       <button type="button" class="btn-sm" onclick="Kiosk.connect()" style="border-color:#ffcc00;color:#ffcc00;">Connect Kiosk</button>
-      <button type="button" class="btn-borrow" style="width:auto;padding:7px 12px;" onclick="Kiosk.arm('BORROW')">Arm Borrow</button>
-      <button type="button" class="btn-return" style="width:auto;padding:7px 12px;background:#ef4444;color:#fff;" onclick="Kiosk.arm('RETURN')">Arm Return</button>
-      <span id="kiosk-selected-tool" style="font-size:11px;color:#8a8a8a;">Click a tool card first, then arm + scan RFID</span>
+      <span id="kiosk-selected-tool" style="font-size:11px;color:#8a8a8a;">Click a tool card to select it, then scan RFID</span>
       <span id="kiosk-status" style="font-size:11px;color:#8a8a8a;margin-left:auto;">Not connected</span>
     </div>
 
@@ -119,14 +117,14 @@
             </div>
             @if (t.Status == "available")
             {
-              <form method="post" asp-page-handler="Borrow">
+              <form method="post" asp-page-handler="Borrow" onclick="event.stopPropagation();">
                 <input type="hidden" name="id" value="@t.Id" />
                 <button type="submit" class="btn-borrow">BORROW TOOL</button>
               </form>
             }
             else if (t.Status == "inuse" || t.Status == "overdue")
             {
-              <form method="post" asp-page-handler="Return">
+              <form method="post" asp-page-handler="Return" onclick="event.stopPropagation();">
                 <input type="hidden" name="id" value="@t.Id" />
                 <button type="submit" class="btn-return" style="background:#ef4444;color:#fff;">RETURN</button>
               </form>
