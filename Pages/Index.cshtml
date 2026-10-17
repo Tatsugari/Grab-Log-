@@ -1,132 +1,181 @@
 @page
+
 @model IndexModel
+
 @{
+
     ViewData["Title"] = "Login";
+
 }
 
-<div id="app-wrapper">
-  <div class="auth-screen">
-    <div class="auth-card">
-      <div class="hazard-stripe"></div>
-      <div class="auth-logo">
-        <img src="~/logo.png" alt="Logo" class="logo-img" />
-        <div>
-          <div class="logo-title">GRAB & LOG</div>
-          <div class="logo-sub">TOOL ROOM 5.1</div>
-        </div>
+
+
+<div class="auth-screen">
+
+  <div class="auth-card">
+
+    <div class="hazard-stripe"></div>
+
+    <div class="auth-logo">
+
+      <img src="~/logo.png" alt="Logo" class="logo-img" />
+
+      <div>
+
+        <div class="logo-title">GRAB & LOG</div>
+
+        <div class="logo-sub">TOOL ROOM 5.1</div>
+
       </div>
 
-      @if (Model.Mode == "welcome")
-      {
-        <h1>Welcome</h1>
-        <p class="auth-desc">Create a Member or Admin account for the tool room.</p>
-        <form method="post" asp-page-handler="Register" onsubmit="handleAuthSubmit(event)">
-          <label>EMAIL</label>
-          <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
-          <label>PIN / PASSWORD</label>
-          <input type="password" name="Pin" placeholder="••••••••" required />
-          <label>ACCOUNT TYPE</label>
-          <select name="Role" style="width:100%;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:7px;padding:11px 12px;color:#f0f0f0;font-size:13px;">
-            <option value="member">Member</option>
-            <option value="admin">Admin</option>
-          </select>
-          <p id="js-msg-err" class="msg-err">@Model.Message</p>
-          <button type="submit" class="btn-yellow">Create Account</button>
-        </form>
-        <p class="auth-links">
-          Already have an account?<br/>
-          <a href="/?mode=member">Member Log In ›</a>
-          &nbsp;·&nbsp;
-          <a href="/?mode=admin">Admin Log In ›</a>
-        </p>
-      }
-      else if (Model.Mode == "admin")
-      {
-        <h1>Admin Login</h1>
-        <p class="auth-desc">Sign in as Admin to manage inventory, returns, disposals, and restore tools.</p>
-        <form method="post" asp-page-handler="Login" onsubmit="handleAuthSubmit(event)">
-          <input type="hidden" name="Role" value="admin" />
-          <label>ADMIN EMAIL</label>
-          <input type="email" name="Email" value="@Model.Email" placeholder="admin@company.com" required />
-          <label>PIN / PASSWORD</label>
-          <input type="password" name="Pin" placeholder="••••••••" required />
-          <p id="js-msg-err" class="msg-err">@Model.Message</p>
-          <button type="submit" class="btn-yellow">Sign in as Admin</button>
-        </form>
-        <p class="auth-links">
-          <a href="/?mode=member">Member Log In ›</a>
-          &nbsp;·&nbsp;
-          <a href="/?mode=welcome">Create Account ›</a>
-        </p>
-      }
-      else
-      {
-        <h1>Member Login</h1>
-        <p class="auth-desc">Sign in as a Member to borrow and return tools from the inventory.</p>
-        <form method="post" asp-page-handler="Login" onsubmit="handleAuthSubmit(event)">
-          <input type="hidden" name="Role" value="member" />
-          <label>MEMBER EMAIL</label>
-          <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
-          <p class="hint">Use the email connected to your member profile.</p>
-          <label>PIN / PASSWORD</label>
-          <input type="password" name="Pin" placeholder="••••••••" required />
-          <p id="js-msg-err" class="msg-err">@Model.Message</p>
-          <button type="submit" class="btn-yellow">Sign in to inventory</button>
-        </form>
-        <p class="auth-links">
-          <a href="/?mode=admin">Admin Log In ›</a>
-          &nbsp;·&nbsp;
-          <a href="/?mode=welcome">Create Account ›</a>
-        </p>
-      }
     </div>
-  </div>
-</div>
 
-<script>
-async function handleAuthSubmit(event) {
-    event.preventDefault();
 
-    const form = event.target;
-    const formData = new FormData(form);
-    const errDisplay = document.getElementById('js-msg-err');
 
-    try {
-        const response = await fetch(form.action || window.location.href, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
+    @if (Model.Mode == "welcome")
 
-        const htmlText = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlText, 'text/html');
-        const newErrMsg = doc.getElementById('js-msg-err');
+    {
 
-        if (newErrMsg && newErrMsg.innerText.trim() !== '') {
-            // Show password/validation error inline without reloading
-            if (errDisplay) {
-                errDisplay.innerText = newErrMsg.innerText;
-            }
-        } else if (response.redirected || response.url.includes('Inventory') || !doc.querySelector('.auth-card')) {
-            // Successful login: Extract the main body content of the incoming page 
-            // and inject it into our wrapper WITHOUT a browser reload or socket drop!
-            const incomingContent = doc.querySelector('main') || doc.querySelector('.container') || doc.body;
-            document.getElementById('app-wrapper').innerHTML = incomingContent.innerHTML;
-        } else {
-            // Mode switching (member/admin views)
-            const newAuthCard = doc.querySelector('.auth-card');
-            if (newAuthCard) {
-                document.querySelector('.auth-card').innerHTML = newAuthCard.innerHTML;
-            }
+      <h1>Welcome</h1>
+
+      <p class="auth-desc">Create a Member or Admin account for the tool room.</p>
+
+      <form method="post" asp-page-handler="Register">
+
+        <label>EMAIL</label>
+
+        <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
+
+        <label>PIN / PASSWORD</label>
+
+        <input type="password" name="Pin" placeholder="••••••••" required />
+
+        <label>ACCOUNT TYPE</label>
+
+        <select name="Role" style="width:100%;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:7px;padding:11px 12px;color:#f0f0f0;font-size:13px;">
+
+          <option value="member">Member</option>
+
+          <option value="admin">Admin</option>
+
+        </select>
+
+        @if (!string.IsNullOrEmpty(Model.Message))
+
+        {
+
+          <p class="msg-err">@Model.Message</p>
+
         }
-    } catch (err) {
-        console.error('Submission error:', err);
-        if (errDisplay) {
-            errDisplay.innerText = 'Error submitting request. Please try again.';
-        }
+
+        <button type="submit" class="btn-yellow">Create Account</button>
+
+      </form>
+
+      <p class="auth-links">
+
+        Already have an account?<br/>
+
+        <a href="/?mode=member">Member Log In ›</a>
+
+        &nbsp;·&nbsp;
+
+        <a href="/?mode=admin">Admin Log In ›</a>
+
+      </p>
+
     }
-}
-</script>
+
+    else if (Model.Mode == "admin")
+
+    {
+
+      <h1>Admin Login</h1>
+
+      <p class="auth-desc">Sign in as Admin to manage inventory, returns, disposals, and restore tools.</p>
+
+      <form method="post" asp-page-handler="Login">
+
+        <input type="hidden" name="Role" value="admin" />
+
+        <label>ADMIN EMAIL</label>
+
+        <input type="email" name="Email" value="@Model.Email" placeholder="admin@company.com" required />
+
+        <label>PIN / PASSWORD</label>
+
+        <input type="password" name="Pin" placeholder="••••••••" required />
+
+        @if (!string.IsNullOrEmpty(Model.Message))
+
+        {
+
+          <p class="msg-err">@Model.Message</p>
+
+        }
+
+        <button type="submit" class="btn-yellow">Sign in as Admin</button>
+
+      </form>
+
+      <p class="auth-links">
+
+        <a href="/?mode=member">Member Log In ›</a>
+
+        &nbsp;·&nbsp;
+
+        <a href="/?mode=welcome">Create Account ›</a>
+
+      </p>
+
+    }
+
+    else
+
+    {
+
+      <h1>Member Login</h1>
+
+      <p class="auth-desc">Sign in as a Member to borrow and return tools from the inventory.</p>
+
+      <form method="post" asp-page-handler="Login">
+
+        <input type="hidden" name="Role" value="member" />
+
+        <label>MEMBER EMAIL</label>
+
+        <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
+
+        <p class="hint">Use the email connected to your member profile.</p>
+
+        <label>PIN / PASSWORD</label>
+
+        <input type="password" name="Pin" placeholder="••••••••" required />
+
+        @if (!string.IsNullOrEmpty(Model.Message))
+
+        {
+
+          <p class="msg-err">@Model.Message</p>
+
+        }
+
+        <button type="submit" class="btn-yellow">Sign in to inventory</button>
+
+      </form>
+
+      <p class="auth-links">
+
+        <a href="/?mode=admin">Admin Log In ›</a>
+
+        &nbsp;·&nbsp;
+
+        <a href="/?mode=welcome">Create Account ›</a>
+
+      </p>
+
+    }
+
+  </div>
+
+</div>
