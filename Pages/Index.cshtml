@@ -19,7 +19,7 @@
     {
       <h1>Welcome</h1>
       <p class="auth-desc">Create a Member or Admin account for the tool room.</p>
-      <form id="authForm" method="post" asp-page-handler="Register" onsubmit="handleAuthSubmit(event)">
+      <form method="post" asp-page-handler="Register" onsubmit="handleAuthSubmit(event)">
         <label>EMAIL</label>
         <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
         <label>PIN / PASSWORD</label>
@@ -43,7 +43,7 @@
     {
       <h1>Admin Login</h1>
       <p class="auth-desc">Sign in as Admin to manage inventory, returns, disposals, and restore tools.</p>
-      <form id="authForm" method="post" asp-page-handler="Login" onsubmit="handleAuthSubmit(event)">
+      <form method="post" asp-page-handler="Login" onsubmit="handleAuthSubmit(event)">
         <input type="hidden" name="Role" value="admin" />
         <label>ADMIN EMAIL</label>
         <input type="email" name="Email" value="@Model.Email" placeholder="admin@company.com" required />
@@ -62,7 +62,7 @@
     {
       <h1>Member Login</h1>
       <p class="auth-desc">Sign in as a Member to borrow and return tools from the inventory.</p>
-      <form id="authForm" method="post" asp-page-handler="Login" onsubmit="handleAuthSubmit(event)">
+      <form method="post" asp-page-handler="Login" onsubmit="handleAuthSubmit(event)">
         <input type="hidden" name="Role" value="member" />
         <label>MEMBER EMAIL</label>
         <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
@@ -83,7 +83,7 @@
 
 <script>
 async function handleAuthSubmit(event) {
-    // 1. Stop the browser from doing a native form submit / reload
+    // Stop the browser's default full-page reload
     event.preventDefault();
 
     const form = event.target;
@@ -91,7 +91,7 @@ async function handleAuthSubmit(event) {
     const errDisplay = document.getElementById('js-msg-err');
 
     try {
-        // 2. Send the request silently in the background
+        // Send data in the background via fetch
         const response = await fetch(form.action || window.location.href, {
             method: 'POST',
             body: formData,
@@ -104,24 +104,19 @@ async function handleAuthSubmit(event) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, 'text/html');
 
-        // 3. Check if there is an error message in the response
         const newErrMsg = doc.getElementById('js-msg-err');
-        const newAuthCard = doc.querySelector('.auth-card');
 
         if (newErrMsg && newErrMsg.innerText.trim() !== '') {
-            // Validation or login error: update error text inline without reloading
+            // Show validation or incorrect password errors inline
             if (errDisplay) {
                 errDisplay.innerText = newErrMsg.innerText;
             }
-        } else if (newAuthCard) {
-            // If it's a mode change (e.g., switching between login/register), swap the card content smoothly
-            document.querySelector('.auth-card').innerHTML = newAuthCard.innerHTML;
         } else {
-            // Successful login: load the next page content dynamically into the current DOM 
-            // WITHOUT triggering a browser reload or breaking your ESP32 connection session!
-            document.open();
-            document.write(htmlText);
-            document.close();
+            // Success: Update page content smoothly in place without reloading or breaking the kiosk connection
+            const newAuthScreen = doc.querySelector('.auth-screen');
+            if (newAuthScreen) {
+                document.querySelector('.auth-screen').innerHTML = newAuthScreen.innerHTML;
+            }
         }
     } catch (err) {
         console.error('Submission error:', err);
