@@ -83,7 +83,6 @@
 
 <script>
 async function handleAuthSubmit(event) {
-    // Stop the browser's default full-page reload
     event.preventDefault();
 
     const form = event.target;
@@ -91,7 +90,6 @@ async function handleAuthSubmit(event) {
     const errDisplay = document.getElementById('js-msg-err');
 
     try {
-        // Send data in the background via fetch
         const response = await fetch(form.action || window.location.href, {
             method: 'POST',
             body: formData,
@@ -101,22 +99,28 @@ async function handleAuthSubmit(event) {
         });
 
         const htmlText = await response.text();
+
+        // If the login was successful, the server redirects to Inventory. 
+        // We load the inventory HTML directly into the document view cleanly.
+        if (response.redirected || response.url.includes('Inventory') || !htmlText.includes('auth-card')) {
+            document.open();
+            document.write(htmlText);
+            document.close();
+            return;
+        }
+
+        // If it failed, parse the returned page for error messages
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, 'text/html');
-
         const newErrMsg = doc.getElementById('js-msg-err');
+        const newAuthCard = doc.querySelector('.auth-card');
 
         if (newErrMsg && newErrMsg.innerText.trim() !== '') {
-            // Show validation or incorrect password errors inline
             if (errDisplay) {
                 errDisplay.innerText = newErrMsg.innerText;
             }
-        } else {
-            // Success: Update page content smoothly in place without reloading or breaking the kiosk connection
-            const newAuthScreen = doc.querySelector('.auth-screen');
-            if (newAuthScreen) {
-                document.querySelector('.auth-screen').innerHTML = newAuthScreen.innerHTML;
-            }
+        } else if (newAuthCard) {
+            document.querySelector('.auth-card').innerHTML = newAuthCard.innerHTML;
         }
     } catch (err) {
         console.error('Submission error:', err);
