@@ -1,91 +1,61 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Kiosk Dashboard";
 }
 
-<div class="auth-screen">
-  <div class="auth-card">
-    <div class="hazard-stripe"></div>
-    <div class="auth-logo">
-      <img src="~/logo.png" alt="Logo" class="logo-img" />
-      <div>
-        <div class="logo-title">GRAB & LOG</div>
-        <div class="logo-sub">TOOL ROOM 5.1</div>
-      </div>
+<div class="text-center mt-5">
+    <h2>GrabLog Kiosk Panel</h2>
+    <p class="text-muted">Select an action or scan your RFID card.</p>
+
+    <!-- Kiosk Action Buttons -->
+    <div class="mt-4">
+        <button type="button" class="btn btn-success btn-lg mx-2" onclick="triggerKioskAction('BORROW')">Borrow Tool</button>
+        <button type="button" class="btn btn-danger btn-lg mx-2" onclick="triggerKioskAction('RETURN')">Return Tool</button>
     </div>
 
-    @if (Model.Mode == "welcome")
-    {
-      <h1>Welcome</h1>
-      <p class="auth-desc">Create a Member or Admin account for the tool room.</p>
-      <form method="post" asp-page-handler="Register">
-        <label>EMAIL</label>
-        <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
-        <label>PIN / PASSWORD</label>
-        <input type="password" name="Pin" placeholder="••••••••" required />
-        <label>ACCOUNT TYPE</label>
-        <select name="Role" style="width:100%;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:7px;padding:11px 12px;color:#f0f0f0;font-size:13px;">
-          <option value="member">Member</option>
-          <option value="admin">Admin</option>
-        </select>
-        @if (!string.IsNullOrEmpty(Model.Message))
-        {
-          <p class="msg-err">@Model.Message</p>
-        }
-        <button type="submit" class="btn-yellow">Create Account</button>
-      </form>
-      <p class="auth-links">
-        Already have an account?<br/>
-        <a href="/?mode=member">Member Log In ›</a>
-        &nbsp;·&nbsp;
-        <a href="/?mode=admin">Admin Log In ›</a>
-      </p>
-    }
-    else if (Model.Mode == "admin")
-    {
-      <h1>Admin Login</h1>
-      <p class="auth-desc">Sign in as Admin to manage inventory, returns, disposals, and restore tools.</p>
-      <form method="post" asp-page-handler="Login">
-        <input type="hidden" name="Role" value="admin" />
-        <label>ADMIN EMAIL</label>
-        <input type="email" name="Email" value="@Model.Email" placeholder="admin@company.com" required />
-        <label>PIN / PASSWORD</label>
-        <input type="password" name="Pin" placeholder="••••••••" required />
-        @if (!string.IsNullOrEmpty(Model.Message))
-        {
-          <p class="msg-err">@Model.Message</p>
-        }
-        <button type="submit" class="btn-yellow">Sign in as Admin</button>
-      </form>
-      <p class="auth-links">
-        <a href="/?mode=member">Member Log In ›</a>
-        &nbsp;·&nbsp;
-        <a href="/?mode=welcome">Create Account ›</a>
-      </p>
-    }
-    else
-    {
-      <h1>Member Login</h1>
-      <p class="auth-desc">Sign in as a Member to borrow and return tools from the inventory.</p>
-      <form method="post" asp-page-handler="Login">
-        <input type="hidden" name="Role" value="member" />
-        <label>MEMBER EMAIL</label>
-        <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
-        <p class="hint">Use the email connected to your member profile.</p>
-        <label>PIN / PASSWORD</label>
-        <input type="password" name="Pin" placeholder="••••••••" required />
-        @if (!string.IsNullOrEmpty(Model.Message))
-        {
-          <p class="msg-err">@Model.Message</p>
-        }
-        <button type="submit" class="btn-yellow">Sign in to inventory</button>
-      </form>
-      <p class="auth-links">
-        <a href="/?mode=admin">Admin Log In ›</a>
-        &nbsp;·&nbsp;
-        <a href="/?mode=welcome">Create Account ›</a>
-      </p>
-    }
-  </div>
+    <!-- Status Message Display Area -->
+    <div id="statusMessage" class="mt-4 alert" style="display: none;"></div>
 </div>
+
+<!-- JavaScript to handle button clicks without reloading the page -->
+<script>
+async function triggerKioskAction(actionType) {
+    const statusDiv = document.getElementById('statusMessage');
+    
+    // Default payload using your system configuration
+    const payload = {
+        CardUID: "DEFAULT_UID", // Replace or grab dynamically if using physical reader input
+        UserName: "Member1",
+        ActionType: actionType,
+        ToolId: "TOOL-01"
+    };
+
+    try {
+        // Sends request to your KioskApiController without refreshing the page
+        let response = await fetch('/api/kiosk/transaction', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        let result = await response.json();
+        
+        statusDiv.style.display = 'block';
+        if (response.ok && result.success) {
+            statusDiv.className = 'mt-4 alert alert-success';
+            statusDiv.innerText = result.message;
+        } else {
+            statusDiv.className = 'mt-4 alert alert-danger';
+            statusDiv.innerText = "Error: " + (result.message || "Transaction failed.");
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'mt-4 alert alert-danger';
+        statusDiv.innerText = "Network error connecting to server.";
+    }
+}
+</script>
