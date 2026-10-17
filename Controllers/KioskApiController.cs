@@ -20,14 +20,17 @@ public class KioskApiController : ControllerBase
             return BadRequest(new { success = false, message = "Missing required fields." });
         }
 
+        string userName = string.IsNullOrEmpty(request.UserName) ? "Member1" : request.UserName;
+        string userEmail = "Member1@gmail.com"; // System fallback or kiosk default operator email
+
         if (request.ActionType.Equals("BORROW", StringComparison.OrdinalIgnoreCase))
         {
-            await _tools.BorrowAsync(request.ToolId, request.UserName, request.UserEmail ?? "kiosk@system.local");
+            await _tools.BorrowAsync(request.ToolId, userName, userEmail);
             return Ok(new { success = true, message = $"Tool {request.ToolId} borrowed successfully." });
         }
         else if (request.ActionType.Equals("RETURN", StringComparison.OrdinalIgnoreCase))
         {
-            await _tools.ReturnAsync(request.ToolId, request.UserName, request.UserEmail ?? "kiosk@system.local");
+            await _tools.ReturnAsync(request.ToolId, userName, userEmail);
             return Ok(new { success = true, message = $"Tool {request.ToolId} returned successfully." });
         }
 
