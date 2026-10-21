@@ -1,0 +1,117 @@
+@model GrabLog.ViewComponents.NotificationBellViewComponent.BellModel
+@{
+    string TypeIcon(string t) => t switch
+    {
+        "borrow" => "📦",
+        "return" => "✅",
+        "overdue" => "⚠️",
+        "dispose" => "🗑️",
+        "restore" => "♻️",
+        _ => "🔔"
+    };
+    string TypeColor(string t) => t switch
+    {
+        "borrow" => "#ffcc00",
+        "return" => "#22c55e",
+        "overdue" => "#ef4444",
+        "dispose" => "#ef4444",
+        "restore" => "#22c55e",
+        _ => "#8a8a8a"
+    };
+}
+
+<div class="notif-wrap" id="notif-wrap">
+  <button type="button" class="notif-bell" id="notif-bell" onclick="toggleNotif()" title="Notifications">
+    🔔
+    @if (Model.Count > 0)
+    {
+      <span class="notif-badge">@(Model.Count > 9 ? "9+" : Model.Count.ToString())</span>
+    }
+  </button>
+  <div class="notif-panel hidden" id="notif-panel">
+    <div class="notif-panel-head">
+      <span>Notifications</span>
+      <a href="/Notifications" style="color:#ffcc00;font-size:11px;text-decoration:none;">View all</a>
+    </div>
+
+    <div id="notif-enable-box" class="notif-enable-box" style="display:none;">
+      <div style="font-size:12px;color:#f0f0f0;margin-bottom:8px;">Desktop alerts are off</div>
+      <div style="font-size:11px;color:#8a8a8a;margin-bottom:10px;">Click below so Windows can show toasts (bottom-right) for borrow, return, and overdue.</div>
+      <button type="button" class="btn-borrow" style="width:100%;" onclick="enableDesktopNotifs()">Enable desktop notifications</button>
+      <div id="notif-enable-status" style="font-size:11px;color:#8a8a8a;margin-top:8px;"></div>
+    </div>
+
+    @if (Model.Items.Count == 0)
+    {
+      <div class="notif-empty">No notifications yet</div>
+    }
+    else
+    {
+      @foreach (var n in Model.Items.Take(8))
+      {
+        var local = n.CreatedAt?.ToLocalTime();
+        <div class="notif-item @(n.IsRead ? "" : "unread")">
+          <div class="notif-icon" style="color:@TypeColor(n.Type)">@TypeIcon(n.Type)</div>
+          <div class="notif-body">
+            <div class="notif-title">@n.Title</div>
+            <div class="notif-msg">@n.Message</div>
+            <div class="notif-time">@(local?.ToString("MMM d · h:mm tt") ?? "")</div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+<script>
+function toggleNotif() {
+  var p = document.getElementById('notif-panel');
+  if (p) p.classList.toggle('hidden');
+  updateEnableBox();
+}
+function updateEnableBox() {
+  var box = document.getElementById('notif-enable-box');
+  if (!box) return;
+  if (!('Notification' in window)) {
+    box.style.display = 'block';
+    var s = document.getElementById('notif-enable-status');
+    if (s) s.textContent = 'This browser does not support desktop notifications.';
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    box.style.display = 'none';
+  } else {
+    box.style.display = 'block';
+  }
+}
+function enableDesktopNotifs() {
+  var status = document.getElementById('notif-enable-status');
+  if (!('Notification' in window)) {
+    if (status) status.textContent = 'Not supported in this browser.';
+    return;
+  }
+  Notification.requestPermission().then(function (perm) {
+    if (perm === 'granted') {
+      if (status) status.textContent = 'Enabled! You will get Windows toasts.';
+      updateEnableBox();
+      // test toast so they see it works
+      if (window.GrabLogNotify) {
+        GrabLogNotify.show('GRAB & LOG', 'Desktop notifications are on.', 'grablog-test');
+      } else {
+        new Notification('GRAB & LOG', { body: 'Desktop notifications are on.', icon: '/logo.png' });
+      }
+    } else if (perm === 'denied') {
+      if (status) status.textContent = 'Blocked. Click the lock icon next to the URL → Notifications → Allow.';
+    } else {
+      if (status) status.textContent = 'Permission not granted.';
+    }
+  });
+}
+document.addEventListener('click', function(e) {
+  var w = document.getElementById('notif-wrap');
+  if (w && !w.contains(e.target)) {
+    var p = document.getElementById('notif-panel');
+    if (p) p.classList.add('hidden');
+  }
+});
+document.addEventListener('DOMContentLoaded', updateEnableBox);
+</script>
