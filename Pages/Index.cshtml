@@ -1,0 +1,78 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="auth-screen">
+  <div class="auth-card">
+    <div class="hazard-stripe"></div>
+    <div class="auth-logo">
+      <img src="~/logo.png" alt="Logo" class="logo-img" />
+      <div>
+        <div class="logo-title">GRAB &amp; LOG</div>
+        <div class="logo-sub">TOOL ROOM 5.1</div>
+      </div>
+    </div>
+
+    @if (Model.Mode == "welcome")
+    {
+      <h1>Create account</h1>
+      <p class="auth-desc">New accounts are members by default. An existing admin can promote someone in Member Registry.</p>
+      <form method="post" asp-page-handler="Register">
+        <label>EMAIL</label>
+        <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
+        <label>PIN / PASSWORD</label>
+        <input type="password" name="Pin" placeholder="••••••••" required />
+        <input type="hidden" name="Role" value="member" />
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+          <p class="msg-err">@Model.Message</p>
+        }
+        <button type="submit" class="btn-yellow">Create Account</button>
+      </form>
+      <p class="auth-links">
+        <a href="/?mode=clear">Already have an account? Sign in ›</a>
+      </p>
+    }
+    else if (Model.Mode == "verify")
+    {
+      <h1>Email verification</h1>
+      <p class="auth-desc">We sent a 6-digit code to <strong>@Model.Email</strong>.</p>
+      <form method="post" asp-page-handler="Verify">
+        <label>VERIFICATION CODE</label>
+        <input type="text" name="Code" value="@Model.Code" placeholder="123456" maxlength="6" required autocomplete="one-time-code" inputmode="numeric" />
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+          <p class="msg-err">@Model.Message</p>
+        }
+        <button type="submit" class="btn-yellow">Verify &amp; enter</button>
+      </form>
+      <form method="post" asp-page-handler="Resend" style="margin-top:10px;">
+        <button type="submit" class="btn-sm" style="width:100%;">Resend code</button>
+      </form>
+      <p class="auth-links">
+        <a href="/?mode=clear">← Back to login</a>
+      </p>
+    }
+    else
+    {
+      <h1>Sign in</h1>
+      <p class="auth-desc">Enter your email and PIN. The system detects if you are Admin or Member automatically.</p>
+      <form method="post" asp-page-handler="Login">
+        <label>EMAIL</label>
+        <input type="email" name="Email" value="@Model.Email" placeholder="you@company.com" required />
+        <label>PIN / PASSWORD</label>
+        <input type="password" name="Pin" placeholder="••••••••" required />
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+          <p class="msg-err">@Model.Message</p>
+        }
+        <button type="submit" class="btn-yellow">Sign in</button>
+      </form>
+      <p class="auth-links">
+        <a href="/?mode=welcome">Create Account ›</a>
+      </p>
+    }
+  </div>
+</div>
