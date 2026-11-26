@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - GRAB & LOG</title>
+    <meta name="theme-color" content="#ffcc00" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="GrabLog" />
+    <link rel="manifest" href="~/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="~/icons/apple-touch-icon.png?v=3" />
+    <link href="~/css/app.css?v=5" rel="stylesheet" />
+</head>
+<body>
+    @RenderBody()
+    <script src="~/js/notifications.js"></script>
+    <script>
+      // PWA install
+      let deferredInstallPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        var btn = document.getElementById('btn-install-app');
+        if (btn) btn.style.display = 'inline-block';
+      });
+      function installWebApp() {
+        if (deferredInstallPrompt) {
+          deferredInstallPrompt.prompt();
+          deferredInstallPrompt.userChoice.then(function () {
+            deferredInstallPrompt = null;
+          });
+          return;
+        }
+        // Fallback instructions (Chrome/Edge)
+        var msg =
+          "To install GRAB & LOG as an app:\n\n" +
+          "1. Use Google Chrome or Microsoft Edge\n" +
+          "2. Make sure the address is http://localhost:5000\n" +
+          "3. Click the ⋮ menu (top-right)\n" +
+          "4. Choose: Cast, save and share → Install page as app\n" +
+          "   (or App available / Install GRAB & LOG)\n\n" +
+          "OR create a desktop shortcut:\n" +
+          "Chrome menu ⋮ → Cast, save and share → Create shortcut → Open as window";
+        alert(msg);
+      }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(function () {});
+      }
+
+      function enableDesktopNotifs() {
+        if (!('Notification' in window)) {
+          alert('This browser does not support desktop notifications.');
+          return;
+        }
+        Notification.requestPermission().then(function (perm) {
+          if (perm === 'granted') {
+            if (window.GrabLogNotify) {
+              GrabLogNotify.show('GRAB & LOG', 'PC alerts are on.', 'grablog-test');
+            }
+            var b = document.getElementById('btn-enable-desktop');
+            if (b) { b.textContent = 'PC alerts on'; b.disabled = true; }
+          } else if (perm === 'denied') {
+            alert('Blocked. Click the lock icon next to the URL → Notifications → Allow.');
+          }
+        });
+      }
+      document.addEventListener('DOMContentLoaded', function () {
+        var b = document.getElementById('btn-enable-desktop');
+        if (b && 'Notification' in window && Notification.permission === 'granted') {
+          b.textContent = 'PC alerts on';
+          b.disabled = true;
+        }
+      });
+    </script>
+    @if (TempData["NotifyTitle"] != null)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.GrabLogNotify && Notification.permission === 'granted') {
+                    GrabLogNotify.show(
+                        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["NotifyTitle"]?.ToString() ?? "")),
+                        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["NotifyBody"]?.ToString() ?? "")),
+                        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["NotifyTag"]?.ToString() ?? "grablog-action"))
+                    );
+                }
+            });
+        </script>
+    }
+    <script>
+      (function pollNotifs() {
+        if (!window.GrabLogNotify) return;
+        function tick() {
+          if (!('Notification' in window) || Notification.permission !== 'granted') return;
+          fetch('/api/notifications', { credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .then(function (items) {
+              if (!Array.isArray(items)) return;
+              var now = Date.now();
+              var fresh = items.filter(function (n) {
+                if (n.is_read) return false;
+                if (!n.created_at) return true;
+                var t = new Date(n.created_at).getTime();
+                return (now - t) < 2 * 60 * 1000;
+              });
+              GrabLogNotify.showNewFromServer(fresh.map(function (n) {
+                return { id: n.id, title: n.title, message: n.message };
+              }));
+            })
+            .catch(function () {});
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+          setTimeout(tick, 3000);
+          setInterval(tick, 20000);
+        });
+      })();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
